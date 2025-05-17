@@ -24,7 +24,7 @@ db.prepare(\`
   )
 \`).run();
 
-// POST /api/docs: inserta o actualiza
+// POST /api/docs
 app.post('/api/docs', (req, res) => {
   const { id, name, date, codes } = req.body;
   const codesStr = Array.isArray(codes) ? codes.join(',') : codes;
@@ -34,20 +34,19 @@ app.post('/api/docs', (req, res) => {
   res.sendStatus(201);
 });
 
-// GET /api/docs: lista todos
+// GET /api/docs
 app.get('/api/docs', (req, res) => {
   const rows = db.prepare('SELECT * FROM docs').all();
-  // convierte codes a array
   const docs = rows.map(r => ({
     id: r.id,
     name: r.name,
     date: r.date,
-    codes: r.codes.split(',').filter(c => c)
+    codes: r.codes ? r.codes.split(',').filter(c => c) : []
   }));
   res.json(docs);
 });
 
-// Sirve el build de React y rutas “catch-all”
+// Sirve React build
 app.use(express.static(path.join(__dirname, '../build')));
 app.use((_, res) =>
   res.sendFile(path.join(__dirname, '../build/index.html'))
@@ -55,5 +54,5 @@ app.use((_, res) =>
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () =>
-  console.log('🚀 API+UI (SQLite) → http://0.0.0.0:' + PORT)
+  console.log('🚀 API+UI → http://0.0.0.0:' + PORT)
 );
