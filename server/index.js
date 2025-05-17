@@ -15,19 +15,20 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 // Inicializa SQLite
 const dbFile = path.join(DATA_DIR, 'db.sqlite');
 const db = new Database(dbFile);
-db.prepare(\`
-  CREATE TABLE IF NOT EXISTS docs (
-    id TEXT PRIMARY KEY,
-    name TEXT,
-    date TEXT,
-    codes TEXT
-  )
-\`).run();
+// Usamos cadena simple en lugar de template literal
+db.prepare(
+  'CREATE TABLE IF NOT EXISTS docs (' +
+  'id TEXT PRIMARY KEY, ' +
+  'name TEXT, ' +
+  'date TEXT, ' +
+  'codes TEXT' +
+  ')'
+).run();
 
 // POST /api/docs
 app.post('/api/docs', (req, res) => {
   const { id, name, date, codes } = req.body;
-  const codesStr = Array.isArray(codes) ? codes.join(',') : codes;
+  const codesStr = Array.isArray(codes) ? codes.join(',') : '';
   db.prepare(
     'INSERT OR REPLACE INTO docs (id,name,date,codes) VALUES (?,?,?,?)'
   ).run(id, name, date, codesStr);
