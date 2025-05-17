@@ -8,6 +8,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ①--- Exponer carpeta data como estática:
+app.use('/data', express.static(path.join(__dirname, 'data')));
+
 // Asegura carpeta data
 const DATA_DIR = path.join(__dirname, 'data');
 fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -15,23 +18,23 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 // Inicializa SQLite
 const dbFile = path.join(DATA_DIR, 'db.sqlite');
 const db = new Database(dbFile);
-// Usamos cadena simple en lugar de template literal
 db.prepare(
   'CREATE TABLE IF NOT EXISTS docs (' +
   'id TEXT PRIMARY KEY, ' +
   'name TEXT, ' +
   'date TEXT, ' +
-  'codes TEXT' +
+  'codes TEXT, ' +
+  'filename TEXT' +           // añadimos campo filename
   ')'
 ).run();
 
-// POST /api/docs
+// POST /api/docs (ahora guarda también nombre de archivo)
 app.post('/api/docs', (req, res) => {
-  const { id, name, date, codes } = req.body;
+  const { id, name, date, codes, filename } = req.body;
   const codesStr = Array.isArray(codes) ? codes.join(',') : '';
   db.prepare(
-    'INSERT OR REPLACE INTO docs (id,name,date,codes) VALUES (?,?,?,?)'
-  ).run(id, name, date, codesStr);
+    'INSERT OR REPLACE INTO docs (id,name,date,codes,filename) VALUES (?,?,?,?,?)'
+  ).run(id, name, date, codesStr, filename);
   res.sendStatus(201);
 });
 
@@ -42,7 +45,8 @@ app.get('/api/docs', (req, res) => {
     id: r.id,
     name: r.name,
     date: r.date,
-    codes: r.codes ? r.codes.split(',').filter(c => c) : []
+    codes: r.codes ? r.codes.split(',').filter(c => c) : [],
+    filename: r.filename
   }));
   res.json(docs);
 });
